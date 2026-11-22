@@ -46,12 +46,22 @@ class IniciarSesionVista(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        # Autenticar al usuario
-        usuario = authenticate(
-            username=correo,
-            password=contrasena
-        )
+        # Buscar al usuario por su correo electrónico
+        usuario_encontrado = User.objects.filter(
+            email__iexact=correo
+        ).first()
 
+        # Autenticar utilizando su nombre de usuario real
+        usuario = None
+
+        if usuario_encontrado:
+            usuario = authenticate(
+                request,
+                username=usuario_encontrado.username,
+                password=contrasena
+            )
+
+        # Validar las credenciales
         if usuario is None:
             return Response(
                 {
