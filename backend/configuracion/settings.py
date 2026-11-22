@@ -53,6 +53,8 @@ INSTALLED_APPS = [
     # Aplicaciones externas
     "rest_framework",
     "corsheaders",
+    "cloudinary_storage",
+    "cloudinary",
     # Aplicaciones del proyecto
     "cuentas",
     "productos",
@@ -144,7 +146,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 # Archivos estáticos en producción
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
