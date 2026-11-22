@@ -30,3 +30,4 @@ Thumbs.db
 # Archivos locales y respaldos
 backend/.zip
 backend/media/
+backend/staticfiles/

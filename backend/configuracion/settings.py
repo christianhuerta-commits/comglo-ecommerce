@@ -29,7 +29,7 @@ if not SECRET_KEY:
     raise RuntimeError("Falta configurar DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DJANGO_DEBUG", "False").lower() == "true"
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -59,6 +59,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -66,7 +67,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-
 ]
 
 ROOT_URLCONF = 'configuracion.urls'
@@ -139,14 +139,35 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / "staticfiles"
+# Archivos estáticos en producción
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 
+# Seguridad HTTPS para producción
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
 # Email
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': os.getenv(
+            'DJANGO_EMAIL_BACKEND',
+            'django.core.mail.backends.console.EmailBackend'
+            if DEBUG else
+            'django.core.mail.backends.smtp.EmailBackend'
+        ),
     },
 }
 
@@ -165,21 +186,32 @@ REST_FRAMEWORK = {
 }
 
 
+# Configuración de caché
+# Utilizar Redis cuando esté configurado.
+# En caso contrario, utilizar la caché local de Django.
 
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": (
-            f"redis://{os.getenv('REDIS_USUARIO')}:"
-            f"{os.getenv('REDIS_CONTRASENA')}@"
-            f"{os.getenv('REDIS_HOST')}:"
-            f"{os.getenv('REDIS_PORT')}/0"
-        ),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+if os.getenv("REDIS_HOST"):
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": (
+                f"redis://{os.getenv('REDIS_USUARIO')}:"
+                f"{os.getenv('REDIS_CONTRASENA')}@"
+                f"{os.getenv('REDIS_HOST')}:"
+                f"{os.getenv('REDIS_PORT')}/0"
+            ),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            },
+        }
     }
-}
+else:
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+            "LOCATION": "comglo-cache",
+        }
+    }
 # CONFIGURACIÓN DE IMÁGENES DE PRODUCTOS
 
 MEDIA_URL = "/media/"
