@@ -36,6 +36,7 @@ ALLOWED_HOSTS = [
     "localhost",
     ".onrender.com",
     "ecommerce-transfronterizo.netlify.app",
+    "comglo-ecommerce.netlify.app",
 ]
 
 
@@ -176,6 +177,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://ecommerce-transfronterizo.netlify.app",
+    "https://comglo-ecommerce.netlify.app",
 ]
 
 
