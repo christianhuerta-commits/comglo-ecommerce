@@ -4,6 +4,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import BarraNavegacion from "@/componentes/BarraNavegacion";
+import { peticionAutenticada } from "@/lib/api";
 
 // Información del vendedor
 type Usuario = {
@@ -156,10 +157,10 @@ export default function PanelVendedor() {
     setCargandoProductos(true);
     setError("");
     try {
-      const respuesta = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/productos/vendedor/`,
-        { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" }
-      );
+      const respuesta = await peticionAutenticada(
+       `${process.env.NEXT_PUBLIC_API_URL}/api/productos/vendedor/`,
+      { cache: "no-store" }
+    );
       if (!respuesta.ok) throw new Error(`Error HTTP ${respuesta.status}`);
       const datos = await respuesta.json();
       const lista = Array.isArray(datos) ? datos : datos.results;
@@ -206,14 +207,16 @@ export default function PanelVendedor() {
     setGuardandoEdicion(true);
     setError("");
     try {
-      const respuesta = await fetch(
+      const respuesta = await peticionAutenticada(
         `${process.env.NEXT_PUBLIC_API_URL}/api/productos/vendedor/${productoEditando}/`,
         {
           method: "PUT",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(datos),
-        }
-      );
+          }
+        );
       if (!respuesta.ok) {
         const detalle = await respuesta.text();
         throw new Error(detalle);
@@ -238,11 +241,11 @@ export default function PanelVendedor() {
     setProcesandoProducto(producto.id);
     setError("");
     try {
-      const respuesta = await fetch(
+      const respuesta = await peticionAutenticada(
         `${process.env.NEXT_PUBLIC_API_URL}/api/productos/vendedor/${producto.id}/`,
         {
           method: "PUT",
-          headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             nombre: producto.nombre,
             categoria: producto.categoria,
@@ -345,14 +348,10 @@ export default function PanelVendedor() {
         datosProducto.append("imagen", imagen);
       }
 
-      const respuesta = await fetch(
+      const respuesta = await peticionAutenticada(
         `${process.env.NEXT_PUBLIC_API_URL}/api/productos/vendedor/`,
         {
           method: "POST",
-          headers: {
-            // No establecer Content-Type: el navegador genera el límite multipart
-            Authorization: `Bearer ${token}`,
-          },
           body: datosProducto,
         }
       );
